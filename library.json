@@ -1,12 +1,10 @@
 {
-    "id": "{688AC95B-7DF3-E819-94A6-BE8DEF846524}",
-    "name": "EastronModbus",
-    "author": "gogo2001-2002",
-    "url": "https://github.com/gogo2001-2002/EastronModbus",
-    "compatibility": {
-        "version": "7.1"
-    },
-    "version": "1.0",
-    "build": 1,
-    "date": 0
+  "id": "{688AC95B-7DF3-E819-94A6-BE8DEF846524}",
+  "name": "EastronModbus",
+  "author": "gogo2001-2002",
+  "url": "https://github.com/gogo2001-2002/EastronModbus",
+  "compatibility": { "version": "7.1" },
+  "version": "1.1",
+  "build": 0,
+  "date": 0
 }
