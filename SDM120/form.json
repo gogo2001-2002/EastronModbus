@@ -1,7 +1,6 @@
 {
   "elements": [
-    { "type": "NumberSpinner", "name": "DeviceID", "caption": "Modbus Unit ID", "minimum": 1, "maximum": 247 },
-    { "type": "NumberSpinner", "name": "Interval", "caption": "Abfrageintervall (Sekunden)", "minimum": 0, "suffix": "s" }
+    { "type": "NumberSpinner", "name": "Interval", "caption": "Abfrageintervall", "minimum": 0, "suffix": "s" }
   ],
   "actions": [
     { "type": "Button", "label": "Jetzt aktualisieren", "onClick": "SDM120_Update($id);" }
