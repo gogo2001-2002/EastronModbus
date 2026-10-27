@@ -2,7 +2,7 @@
   "id": "{1656F478-D1D2-740E-1890-E3C79B1EB3B2}",
   "name": "SDM120",
   "type": 3,
-  "vendor": "gogo2001-2002",
+  "vendor": "Eastron",
   "aliases": ["Eastron SDM120"],
   "parentRequirements": ["{A5F663AB-C400-4FE5-B207-4D67CC030564}"],
   "childRequirements": [],
