@@ -1,56 +1,50 @@
 # SDM120
 
-Dieses IP-Symcon-Gerätemodul liest vier Messwerte eines Eastron SDM120 über ein verbundenes Modbus-Gateway.
+IP-Symcon-Gerätemodul für den Eastron SDM120. Es liest vier Messwerte über ein verbundenes Modbus-Gateway.
 
-## Voraussetzungen
+## Voraussetzungen und Einrichtung
 
 - IP-Symcon 7.1 oder neuer
-- Eastron SDM120 mit erreichbarem Modbus RTU/TCP-Gateway
-- Ein Modbus-Gateway als übergeordnete Instanz
+- Eastron SDM120 und kompatibles Modbus-RTU/TCP-Gateway
+- Eine SDM120-Instanz mit verbundenem Gateway-Parent
 
-## Einrichtung
-
-1. SDM120-Instanz erstellen.
-2. Als Parent ein kompatibles Modbus-Gateway verbinden.
-3. Die Unit-ID des Zählers am Gateway konfigurieren.
-4. Ein Abfrageintervall in Sekunden einstellen. Standardwert ist 10 Sekunden.
-5. Mit „Jetzt aktualisieren“ kann eine sofortige Abfrage ausgelöst werden.
+Die Modbus-Unit-ID wird am Gateway eingestellt. Das Modul selbst bietet keine Unit-ID-Einstellung.
 
 ## Konfiguration
 
 | Feld | Bedeutung |
 | --- | --- |
-| Modbus Unit ID | Im aktuellen Modulcode gespeichert, aber nicht in die Modbus-Anfrage eingesetzt. Die tatsächlich verwendete Unit-ID ist daher am Gateway einzustellen. |
-| Abfrageintervall | Zeit zwischen den automatischen Aktualisierungen. 0 deaktiviert den Timer. |
+| Abfrageintervall | Zeitabstand zwischen automatischen Aktualisierungen in Sekunden. Standard: 10 s. Wert 0 deaktiviert den Timer. |
+| Jetzt aktualisieren | Startet eine sofortige manuelle Abfrage. |
 
 ## Messwerte
 
-Das Modul fragt Input Register mit Funktion 04 ab. Die Registeradresse und Einheit entsprechen der SDM120-Modbus-Registertabelle.
+Für jeden Messwert wird ein separater Read-Input-Registers-Aufruf (Funktion 04) mit zwei Registern ausgeführt.
 
-| Variable | Registeradresse | Typ | Einheit |
+| Variable | Startadresse (hex) | Typ | Einheit |
 | --- | ---: | --- | --- |
 | Spannung | 0x0000 | Float32 | V |
 | Stromstärke | 0x0006 | Float32 | A |
 | Wirkleistung | 0x000C | Float32 | W |
 | Gesamtenergie | 0x0156 | Float32 | kWh |
 
-Jeder Messwert wird mit einer eigenen Anfrage gelesen. Die Registeranzahl ist jeweils 2 (ein Float32-Wert).
+Die Adressen und Einheiten entsprechen der [Eastron-Protokollbeschreibung](https://www.eastroneurope.com/images/uploads/products/protocol/SDM120-MODBUS_Protocol.pdf). Eastron beschreibt Messwerte als 32-Bit IEEE-754-Floats über je zwei aufeinanderfolgende Register.
 
-## Verhalten und Grenzen des aktuellen Codes
+## Verhalten des Moduls
 
-- Beim Anwenden der Konfiguration wird der Timer auf Intervall × 1000 ms gesetzt.
-- Die Instanz erhält Status 102, wenn ein aktiver Parent vorhanden ist; andernfalls Status 201.
-- Bei fehlendem aktivem Parent wird die Aktualisierung abgebrochen.
-- Modbus-Anfragen verwenden Funktion 04, die oben aufgeführte Registeradresse und eine Länge von zwei Registern.
-- Der Parser entfernt die ersten zwei Bytes der Antwort, kehrt die folgenden Bytes um und interpretiert sie als PHP-Little-Endian-Float. Das setzt voraus, dass das Gateway genau dieses Antwortformat liefert und das Zählerformat dazu passt.
-- Bei einer Antwort kürzer als sechs Bytes oder bei einem fehlgeschlagenen Request wird 0.0 zurückgegeben. Ein Modbus-Fehler kann dadurch wie ein echter Messwert von 0 aussehen; zusätzlich wird eine Debugmeldung geschrieben.
-- Die Eigenschaft „Modbus Unit ID“ wird zwar angelegt, aber vom Anfragecode nicht verwendet.
-- Die Variablenprofile sind nicht Bestandteil des Moduls und werden auch nicht angelegt. Es sind deshalb keine expliziten Anzeigeeinheiten in der Moduldatenbank definiert.
-
-Die aktuelle Modulsyntax wurde mit PHP-Lint geprüft. Eine Funktion mit angeschlossenem und real antwortendem Zähler wurde hier nicht getestet.
+- Bei einem aktiven Parent hat die Instanz Status 102; ohne aktiven Parent setzt sie Status 201.
+- Beim Anwenden der Konfiguration wird der Timer auf Abfrageintervall × 1000 ms gestellt.
+- Die Antwort wird anhand der letzten vier Bytes als Float32 interpretiert. Der Code kehrt die Byte-Reihenfolge um und nutzt PHPs native Float-Dekodierung.
+- Bei einem fehlgeschlagenen oder kürzeren Antwortpaket als sechs Bytes wird 0,0 zurückgegeben; dazu erscheint eine Debugmeldung „Modbus Error“ mit der Registeradresse.
+- Fehlerwerte werden nicht separat markiert. Deshalb kann ein Kommunikationsfehler wie ein gültiger Messwert von 0 aussehen.
+- Variablenprofile oder Einheitenprofile werden vom Modul nicht angelegt.
+- Das Modul liest keine weiteren Werte wie Frequenz, Leistungsfaktor, Import-/Exportenergie oder Blindleistung.
 
 ## Fehlerdiagnose
 
-- Status 201: Parent-Gateway verbinden und dessen Status prüfen.
-- Messwerte bleiben bei 0: Parent-Verbindung, Unit-ID am Gateway, Funktion 04, Registeradresse und Antwortformat kontrollieren.
-- Weitere Meldungen stehen im Debug der Instanz unter „Modbus Error“.
+1. Status 201: Parent-Gateway verbinden und Gatewaystatus prüfen.
+2. Alle Werte bleiben 0: Unit-ID und Verbindung am Gateway sowie die Registeranfragen prüfen.
+3. Einzelne Werte bleiben 0: Instanz-Debug auf die Meldung „Modbus Error“ prüfen.
+4. Prüfen, ob das Antwortformat des Gateways mit der Float-Auswertung des Moduls übereinstimmt.
+
+Die PHP-Syntax wurde mit IP-Symcons Modul-Linter geprüft. Eine Prüfung an einem real angeschlossenen SDM120 war nicht möglich.
